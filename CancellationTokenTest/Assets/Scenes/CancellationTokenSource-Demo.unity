@@ -759,9 +759,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e6cf5d71fe663047ace18f7a2a2c754, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startUncancellableButton: {fileID: 1441397791}
-  startCancellableButton: {fileID: 1622842039}
-  cancelButton: {fileID: 978634176}
+  startButton: {fileID: 1441397791}
+  StartCancellableButton: {fileID: 1622842039}
+  CancelButton: {fileID: 978634176}
   logText: {fileID: 371508484}
 --- !u!4 &528016665
 Transform:

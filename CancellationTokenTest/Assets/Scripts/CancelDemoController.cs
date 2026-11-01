@@ -7,79 +7,74 @@ using TMPro;
 
 public class CancelDemoController : MonoBehaviour
 {
-    [SerializeField] private Button startUncancellableButton;
-    [SerializeField] private Button startCancellableButton;
-    [SerializeField] private Button cancelButton;
+    [SerializeField] private Button startButton;
+    [SerializeField] private Button StartCancellableButton;
+    [SerializeField] private Button CancelButton;
     [SerializeField] private TMP_Text logText;
 
     private CancellationTokenSource cts;
 
     private void Start()
     {
-        startUncancellableButton.onClick.AddListener(() => RunUncancellableLoop().Forget());
-        startCancellableButton.onClick.AddListener(() => RunCancellableLoop().Forget());
-        cancelButton.onClick.AddListener(CancelRunningLoop);
+        startButton.onClick.AddListener(() => RunTask().Forget());
+        StartCancellableButton.onClick.AddListener(() => RunCancellableTask().Forget());
+        CancelButton.onClick.AddListener(CancelRunningTask);
     }
 
-    private void Log(string message)
+    void Log(string message)
     {
         Debug.Log(message);
         logText.text += message + "\n";
     }
 
-    // デモA: キャンセル手段なし。一度始めたら最後まで止まらない。
-    private async UniTask RunUncancellableLoop()
+    private async UniTask RunTask()
     {
-        Log("Uncancellable loop started. Try clicking Cancel — nothing happens.");
-
-        for (int i = 1; i <= 10; i++)
-        {
-            await UniTask.Delay(500);
-            Log($"Uncancellable tick {i}/10");
-        }
-
-        Log("Uncancellable loop finished naturally.");
-    }
-
-    // デモB: CancellationTokenを渡すことで、外部から止められる。
-    private async UniTask RunCancellableLoop()
-    {
-        cts = new CancellationTokenSource();
-        CancellationToken token = cts.Token;
-
-        Log("Cancellable loop started. Click Cancel anytime to stop it.");
-
+        Log("Task started. Click Cancel to see Register fire on its own.");
         try
         {
             for (int i = 1; i <= 10; i++)
             {
-                token.ThrowIfCancellationRequested();
-                await UniTask.Delay(500, cancellationToken: token);
-                Log($"Cancellable tick {i}/10");
+                await UniTask.Delay(500);
+                Log($"Tick {i}/10");
             }
-
-            Log("Cancellable loop finished naturally.");
+            Log("Task finished naturally.");
         }
         catch (OperationCanceledException)
         {
-            Log("Cancellable loop was cancelled early.");
+            Log("Task loop exited via exception.");
         }
     }
-
-    private void CancelRunningLoop()
+    private async UniTask RunCancellableTask()
     {
-        if (cts == null)
+        cts = new CancellationTokenSource();
+        CancellationToken token = cts.Token;
+        Log("Cancellable task started. Click Cancel to see Register fire on its own.");
+        try
         {
-            Log("Nothing to cancel yet.");
-            return;
+            for (int i = 1; i <= 10; i++)
+            {
+                await UniTask.Delay(500, cancellationToken: token);
+                Log($"Tick {i}/10");
+            }
+            Log("Cancellable task finished naturally.");
         }
-
-        cts.Cancel();
+        catch (OperationCanceledException)
+        {
+            Log("Cancellable task loop exited via exception.");
+        }
     }
-
-    private void OnDestroy()
+    private async void CancelRunningTask()
     {
-        cts?.Cancel();
-        cts?.Dispose();
+        if (cts != null)
+        {
+            cts.Cancel();
+            Log("Cancellation requested.");
+            cts.Dispose();
+            cts = null;
+        }
+        else
+        {
+            Log("No cancellable task is running.");
+        }
     }
 }
